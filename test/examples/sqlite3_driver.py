@@ -40,9 +40,7 @@ def read_header(f_obj):
     t_dict["expansion_space"] = DTR.string(f_obj, 20)
     t_dict["version_valid_for"] = DTR.integer(f_obj)
     t_dict["sqlite_version_number"] = DTR.integer(f_obj)
-    template.define(
-        t_dict
-    )
+    template.define(t_dict)
     return template.extract()
 
 def _main_create_db(path):
