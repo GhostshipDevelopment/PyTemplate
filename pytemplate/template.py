@@ -2,10 +2,13 @@ from struct import unpack, pack
 from collections import OrderedDict as OD
 
 class DataTypeReader(object):
-    def __init__(self, endian="<"):
+    def __init__(self, endian="<", dry_run=False):
         self.endian = endian
+        self.dry_run = dry_run
     def integer(self, f_obj):
         return self._dtype_gen_read("i", 1, 4, f_obj)
+    def long_integer(self, f_obj):
+        return self._dtype_gen_read("l", 1, 8, f_obj)
     def short(self, f_obj):
         return self._dtype_gen_read("h", 1, 2, f_obj)
     def string(self, f_obj, st_length):
@@ -15,8 +18,13 @@ class DataTypeReader(object):
     def byte(self, f_obj):
         return self._dtype_gen_read("b", 1, 1, f_obj)
     def _dtype_gen_read(self, dtype, dtype_count, dtype_size, f_obj):
-        if dtype_count > 1:
-            yield unpack("%s%s%s" % (self.endian, dtype_count, dtype), f_obj.read(dtype_size))
+        if self.dry_run:
+            #must handle strings differently, since they are unpacked based on size and count.
+            if dtype == "s":
+                f_obj.seek(f_obj.tell() + dtype_size)
+            else:
+                f_obj.seek(f_obj.tell()  + (dtype_size * dtype_count))
+            yield None
         else:
             yield unpack("%s%s%s" % (self.endian, dtype_count, dtype), f_obj.read(dtype_size))[0]
 
@@ -25,6 +33,8 @@ class DataTypeWriter(object):
         self.endian = endian
     def integer(self, f_obj, value):
         return self._dtype_gen_write("i", value, 1, f_obj)
+    def long_integer(self, f_obj):
+        return self._dtype_gen_write("l", value, 1, f_obj)
     def short(self, f_obj, value):
         return self._dtype_gen_write("h", value, 1, f_obj)
     def string(self, f_obj, value):
